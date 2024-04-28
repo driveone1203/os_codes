@@ -1,0 +1,276 @@
+// Develop a C program to perform 2x2 matrix addition in child process and determine whether the given number is prime or not in parent process.
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+#include <stdbool.h>
+#include <unistd.h>
+// Function to check if a number is prime
+bool isPrime(int num) {
+    if (num <= 1) {
+        return false;
+    }
+    for (int i = 2; i * i <= num; i++) {
+        if (num % i == 0) {
+            return false;
+        }
+    }
+    return true;
+}
+// Function to add two matrices
+void addMatrices(int mat1[2][2], int mat2[2][2], int sum[2][2]) {
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            sum[i][j] = mat1[i][j] + mat2[i][j];
+        }
+    }
+}
+int main() {
+    // Initialize matrices
+    int mat1[2][2] = {{1, 2}, {3, 4}};
+    int mat2[2][2] = {{5, 6}, {7, 8}};
+    int sum[2][2];
+    // Fork a child process
+    pid_t pid = fork();
+    if (pid == 0) {
+        // Child process
+        addMatrices(mat1, mat2, sum);
+        // Print the sum of the matrices
+        printf("Child process: Sum of matrices is:\n");
+        for (int i = 0; i < 2; i++) {
+            for (int j = 0; j < 2; j++) {
+                printf("%d ", sum[i][j]);
+            }
+            printf("\n");
+        }
+        // Exit the child process
+        exit(0);
+    } else if (pid > 0) {
+        // Parent process
+        int num = 29;
+
+        // Check if the number is prime
+        if (isPrime(num)) {
+            printf("Parent process: %d is prime\n", num);
+        } else {
+            printf("Parent process: %d is not prime\n", num);
+        }
+
+        // Wait for the child process to finish
+        wait(NULL);
+    } else {
+        // Error
+        fprintf(stderr, "Fork failed\n");
+        exit(1);
+    }
+    return 0;
+}
+
+
+// Develop a C program to create a process hierarchy as shown below.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+void print_process_info(const char *message, pid_t pid) {
+    printf("%s: PID=%d, PPID=%d\n", message, getpid(), getppid());
+}
+int main() {
+    pid_t p1 = getpid();
+    print_process_info("Parent process (p1)", p1);
+
+    pid_t p2 = fork();
+    if (p2 == 0) {
+        // Child process p2
+        print_process_info("Child process p2", p2);
+        exit(0);
+    } else if (p2 > 0) {
+        // Parent process p1
+        pid_t p3 = fork();
+        if (p3 == 0) {
+            // Child process p3
+            print_process_info("Child process p3", p3);
+            pid_t p4 = fork();
+	    pid_t p5 = fork();
+            if (p4 == 0) {
+                // Child process p4
+                print_process_info("Child process p4", p4);
+                exit(0);
+            } else if (p4 > 0) {
+                // Child process p3
+                wait(NULL); // Wait for child process p4 to finish
+                print_process_info("Child process p3 finished", p3);
+                exit(0);
+            } else {
+                // Fork failed for p4
+                fprintf(stderr, "Fork failed for p4.\n");
+                exit(1);
+            }
+	    if (p5 == 0) {
+		print_process_info("Child process p5", p5);
+		exit(0);
+	    }
+	    else if (p5 > 0) {
+		wait(NULL);
+		print_process_info("Child process p3 finished", p3);
+		exit(0);
+	    }
+	    else {
+		fprintf(stderr, "Fork failed for p5.\n");
+		exit(1);
+	    }
+        } else if (p3 > 0) {
+            // Parent process p1
+            wait(NULL); // Wait for child process p3 to finish
+            print_process_info("Child process p2 finished", p2);
+            exit(0);
+        } else {
+            // Fork failed for p3
+            fprintf(stderr, "Fork failed for p3.\n");
+            exit(1);
+        }
+    } else {
+        // Fork failed for p2
+        fprintf(stderr, "Fork failed for p2.\n");
+        exit(1);
+    }
+
+    return 0;
+}
+
+
+// Develop a C program to demonstrate Zombie process.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+int main() {
+    pid_t child_pid = fork();
+    if (child_pid == 0) {
+        // Child process
+        printf("Child process (PID: %d) started.\n", getpid());
+        exit(0);
+    } else if (child_pid > 0) {
+        // Parent process
+        printf("Parent process (PID: %d) is waiting for child to finish.\n", getpid());
+        wait(NULL);
+        printf("Parent process (PID: %d) finished waiting. Child process (PID: %d) has been reaped.\n", getpid(), child_pid);
+    } else {
+        // Fork failed
+        fprintf(stderr, "Fork failed.\n");
+        exit(1);
+    }
+    return 0;
+}
+
+
+// Develop a C program to demonstrate Orphan process.
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/wait.h>
+int main() {
+    pid_t child_pid = fork();
+    if (child_pid == 0) {
+        // Child process
+        printf("Child process (PID: %d) started.\n", getpid());
+	printf("Wait 1 sec\n");
+	sleep(1);
+        printf("Child process (PID: %d) finished.\n", getpid());
+        exit(0);
+    } else if (child_pid > 0) {
+        // Parent process
+        printf("Parent process (PID: %d) is waiting for child to finish.\n", getpid());
+	printf("Wait 2 sec\n");
+	sleep(2);
+        printf("Parent process (PID: %d) finished waiting. Child process (PID: %d) is now an orphan process.\n", getpid(), child_pid);
+    } else {
+        // Fork failed
+        fprintf(stderr, "Fork failed.\n");
+        exit(1);
+    }
+    return 0;
+}
+
+
+// Develop a C program to create three threads. Perform 2x2 matrix addition in threadl, Check whether the given number is prime or not in thread2 and print the average of n
+#include <stdio.h>
+#include <stdlib.h>
+#include <pthread.h>
+// Function to check if a number is prime
+int isPrime(int num) {
+    if (num <= 1) {
+        return 0;
+    }
+    for (int i = 2; i * i <= num; i++) {
+        if (num % i == 0) {
+            return 0;
+        }
+    }
+    return 1;
+}
+// Function to add two matrices
+void addMatrices(int mat1[2][2], int mat2[2][2], int sum[2][2]) {
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            sum[i][j] = mat1[i][j] + mat2[i][j];
+        }
+    }
+}
+// Function to print 2x2 matrix addition
+void printMatrixAddition(int mat1[2][2], int mat2[2][2], int sum[2][2]) {
+    printf("Matrix addition:\n");
+    for (int i = 0; i < 2; i++) {
+        for (int j = 0; j < 2; j++) {
+            printf("%d ", sum[i][j]);
+        }
+        printf("\n");
+    }
+}
+// Function to print if a number is prime or not
+void printIsPrime(int num) {
+    if (isPrime(num)) {
+        printf("%d is prime\n", num);
+    } else {
+        printf("%d is not prime\n", num);
+    }
+}
+// Function to print abg of three numbers
+void printAvg(int a, int b, int c) {
+    printf("avg(%d, %d, %d) = %d\n", a, b, c, (a + b + c)/3);
+}
+// Function to be executed by each thread
+void *thread_function(void *arg) {
+    int num = *((int *)arg);
+    if (num == 1) {
+        int mat1[2][2] = {{1, 2}, {3, 4}};
+        int mat2[2][2] = {{5, 6}, {7, 8}};
+        int sum[2][2];
+        addMatrices(mat1, mat2, sum);
+        printMatrixAddition(mat1, mat2, sum);
+    } else if (num == 2) {
+        printIsPrime(29);
+    } else if (num == 3) {
+        printAvg(1, 2, 3);
+    }
+
+    return NULL;
+}
+int main() {
+    // Create 3 threads
+    pthread_t threads[3];
+    int thread_args[3] = {1, 2, 3};
+
+    for (int i = 0; i < 3; i++) {
+        pthread_create(&threads[i], NULL, thread_function, (void *)&thread_args[i]);
+    }
+
+    // Wait for all threads to finish
+    for (int i = 0; i < 3; i++) {
+        pthread_join(threads[i], NULL);
+    }
+
+    return 0;
+}

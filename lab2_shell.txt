@@ -1,0 +1,97 @@
+# greater of 3 num
+
+echo "Enter a"
+read a
+echo "Enter b"
+read b
+echo "Enter c"
+read c
+if [ $a -gt $b ] && [ $a -gt $c ]
+then
+echo "a is greater"
+elif [ $b -gt $a ] && [ $b -gt $c ]
+then
+echo "b is greater"
+else
+echo "c is greater"
+fi
+
+
+# fibonacci
+echo "Enter n"
+read n
+a=0
+b=1
+for (( i=0; i<n; i++ ))
+do
+        echo -n "$a "
+        fn=$((a+b))
+        a=$b
+        b=$fn
+done
+# while (( i<11 ))
+# do
+#         echo "$i"
+#         i=$((i+1))
+# done
+
+
+# sum of digit
+read num
+g=$num
+s=0
+while [ $num -gt 0 ]
+do
+        k=$(( $num % 10 ))
+        num=$(( $num / 10 ))
+        s=$(( $s + $k ))
+done
+echo "$s"
+
+
+# switch case
+echo "Enter number 1"
+read n1
+echo "Enter number 2"
+read n2
+echo "type op (add|sub|mul|div)"
+read op
+case $op in
+        "add")
+        echo "$(( $n1+$n2 ))"
+        ;;
+        "sub")
+        echo "$(( $n1-n2 ))"
+        ;;
+        "mul")
+        echo "$(( $n1*$n2 ))"
+        ;;
+        "div")
+        echo "$(( $n1/n2 ))"
+        ;;
+        *)
+        echo "Invalid"
+        ;;
+esac
+
+
+# join 2 str
+echo "Enter string 1"
+read s1
+echo "Enter string 2"
+read s2
+s3="$s1 $s2"
+echo $s3
+
+
+# compare 2 str
+echo "Enter string 1"
+read s1
+echo "Enter string 2"
+read s2
+if [[ "$s1" == "$s2" ]]
+then
+        echo "Equal"
+else
+        echo "Not equal"
+fi
