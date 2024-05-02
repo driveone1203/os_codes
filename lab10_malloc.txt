@@ -73,45 +73,6 @@ void bestFit(int blockSize[], int m, int processSize[], int n) {
     printf("\nInternal Fragmentation: %d KB\n", internalFragmentation);
     printf("External Fragmentation: %d KB\n", externalFragmentation);
 }
-void worstFit(int blockSize[], int m, int processSize[], int n) {
-    int allocation[n];
-    for (int i = 0; i < n; i++) {
-        allocation[i] = -1;
-    }
-    int internalFragmentation = 0;
-    int externalFragmentation = 0;
-    for (int i = 0; i < n; i++) {
-        int worstIdx = -1;
-        int maxDiff = -1;
-        for (int j = 0; j < m; j++) {
-            if (blockSize[j] >= processSize[i]) {
-                int diff = blockSize[j] - processSize[i];
-                if (diff > maxDiff) {
-                    maxDiff = diff;
-                    worstIdx = j;
-                }
-            }
-        }
-        if (worstIdx != -1) {
-            allocation[i] = worstIdx;
-            internalFragmentation += maxDiff;
-            blockSize[worstIdx] -= processSize[i];
-        } else {
-            // printf("Process %d could not be allocated memory\n", i + 1);
-            externalFragmentation += processSize[i];
-        }
-    }
-    printf("\nWorst Fit Algorithm:\n");
-    for (int i = 0; i < n; i++) {
-        if (allocation[i] != -1) {
-            printf("Process %d is allocated to block %d\n", i + 1, allocation[i] + 1);
-        } else {
-            printf("Process %d is not allocated\n", i + 1);
-        }
-    }
-    printf("\nInternal Fragmentation: %d KB\n", internalFragmentation);
-    printf("External Fragmentation: %d KB\n", externalFragmentation);
-}
 int main() {
     int ramSize, numPartitions, numProcesses;
     printf("Enter the size of RAM (in KB): ");
@@ -132,6 +93,5 @@ int main() {
     }
     firstFit(blockSize, numPartitions, processSize, numProcesses);
     bestFit(blockSize, numPartitions, processSize, numProcesses);
-    worstFit(blockSize, numPartitions, processSize, numProcesses);
     return 0;
 }
