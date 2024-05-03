@@ -63,6 +63,461 @@ void main() {
 	for (int i = 0; i < n; i++){
 		scanf("%d", &bt[i]);
 	}
+	int ct[n], tat[n], wt[n];
+	float atat, awt;
+	printf("FCFS Scheduling Algorithm\n");	
+	bubbleSort(n, p, at, bt);
+	calcCt(n, at, bt, ct);
+	calcTatWt(n, ct, at, bt, tat, wt);
+	atat = average(n, tat);
+	awt = average(n, wt);
+	printf("Process, AT, BT, CT, TAT, WT\n");
+	for (i=0; i<n; i++) {
+		printf("%d: %d, %d, %d, %d, %d\n", p[i], at[i], bt[i], ct[i], tat[i], wt[i]);
+	}
+	printf("ATAT: %f; AWT: %f\n", atat, awt);
+}
+
+
+// SJF NP
+#include <stdio.h>
+struct Process {
+    int pid;        // Process ID
+    int arrival;    // Arrival Time
+    int burst;      // Burst Time
+    int waiting;    // Waiting Time
+    int turnaround; // Turnaround Time
+    int completed;  // Flag to check if process is completed or not
+};
+// Function to find the process with shortest burst time among the arrived processes
+int findShortestJob(struct Process processes[], int n, int currentTime) {
+    int shortestIndex = -1;
+    int shortestBurst = 999999; // Initializing with a large value
+    for (int i = 0; i < n; i++) {
+        if (processes[i].arrival <= currentTime && !processes[i].completed) {
+            if (processes[i].burst < shortestBurst) {
+                shortestBurst = processes[i].burst;
+                shortestIndex = i;
+            }
+        }
+    }
+    return shortestIndex;
+}
+// Function to calculate waiting and turnaround times for all processes
+void calculateTimes(struct Process processes[], int n) {
+    int currentTime = 0;
+    float totalWaitingTime = 0, totalTurnaroundTime = 0;
+    for (int i = 0; i < n; i++) {
+        int shortestIndex = findShortestJob(processes, n, currentTime);
+        if (shortestIndex == -1) {
+            printf("Error: No process found at time %d\n", currentTime);
+            return;
+        }
+        // Update current time
+        currentTime = currentTime + processes[shortestIndex].burst;
+        // Update waiting and turnaround times for the selected process
+        processes[shortestIndex].waiting = currentTime - processes[shortestIndex].arrival - processes[shortestIndex].burst;
+        processes[shortestIndex].turnaround = currentTime - processes[shortestIndex].arrival;
+
+        // Update total waiting and turnaround times
+        totalWaitingTime += processes[shortestIndex].waiting;
+        totalTurnaroundTime += processes[shortestIndex].turnaround;
+        // Mark the process as completed
+        processes[shortestIndex].completed = 1;
+        printf("Process %d: Waiting Time=%d, Turnaround Time=%d\n", processes[shortestIndex].pid,
+               processes[shortestIndex].waiting, processes[shortestIndex].turnaround);
+    }
+    // Print average waiting and turnaround times
+    printf("Average Waiting Time = %f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time = %f\n", totalTurnaroundTime / n);
+}
+int main() {
+    // Predefined arrival and burst times
+    int n;
+	int arrival[n];
+	int burst[n];
+	printf("Enter number of processes: ");
+	scanf("%d", &n);
+	printf("Enter arrival times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &arrival[i]);
+	}
+	printf("Enter burst times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &burst[i]);
+	}
+    printf("SJF Non-preemptive\n");
+    struct Process processes[n];
+    // Initialize processes
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        processes[i].arrival = arrival[i];
+        processes[i].burst = burst[i];
+        processes[i].waiting = 0;
+        processes[i].turnaround = 0;
+        processes[i].completed = 0;
+    }
+    // Perform SJF scheduling
+    calculateTimes(processes, n);
+
+    return 0;
+}
+
+// SJF P
+#include <stdio.h>
+struct Process {
+    int pid;        // Process ID
+    int arrival;    // Arrival Time
+    int burst;      // Burst Time
+    int remaining;  // Remaining Burst Time
+    int waiting;    // Waiting Time
+    int turnaround; // Turnaround Time
+};
+// Function to find the process with shortest remaining burst time among the arrived processes
+int findShortestJob(struct Process processes[], int n, int currentTime) {
+    int shortestIndex = -1;
+    int shortestBurst = 999999; // Initializing with a large value
+    for (int i = 0; i < n; i++) {
+        if (processes[i].arrival <= currentTime && processes[i].remaining > 0) {
+            if (processes[i].remaining < shortestBurst) {
+                shortestBurst = processes[i].remaining;
+                shortestIndex = i;
+            }
+        }
+    }
+    return shortestIndex;
+}
+// Function to calculate waiting and turnaround times for all processes
+void calculateTimes(struct Process processes[], int n) {
+    int currentTime = 0;
+    int completed = 0;
+    float totalWaitingTime = 0, totalTurnaroundTime = 0;
+    while (completed != n) {
+        int shortestIndex = findShortestJob(processes, n, currentTime);
+        if (shortestIndex == -1) {
+            currentTime++;
+            continue;
+        }
+        // Decrement remaining burst time for the selected process
+        processes[shortestIndex].remaining--;
+        // Update current time
+        currentTime++;
+        // If the process has completed execution
+        if (processes[shortestIndex].remaining == 0) {
+            // Update waiting and turnaround times for the completed process
+            processes[shortestIndex].waiting = currentTime - processes[shortestIndex].arrival - processes[shortestIndex].burst;
+            processes[shortestIndex].turnaround = currentTime - processes[shortestIndex].arrival;
+            // Update total waiting and turnaround times
+            totalWaitingTime += processes[shortestIndex].waiting;
+            totalTurnaroundTime += processes[shortestIndex].turnaround;
+            // Mark the process as completed
+            completed++;
+            printf("Process %d: Arrival Time=%d, Burst Time=%d, Waiting Time=%d, Turnaround Time=%d\n", processes[shortestIndex].pid,
+                   processes[shortestIndex].arrival, processes[shortestIndex].burst,
+                   processes[shortestIndex].waiting, processes[shortestIndex].turnaround);
+        }
+    }
+    // Print average waiting and turnaround times
+    printf("Average Waiting Time = %f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time = %f\n", totalTurnaroundTime / n);
+}
+int main() {
+    // Predefined arrival and burst times
+	int n;
+	int arrival[n];
+	int burst[n];
+	printf("Enter number of processes: ");
+	scanf("%d", &n);
+	printf("Enter arrival times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &arrival[i]);
+	}
+	printf("Enter burst times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &burst[i]);
+	}
+    struct Process processes[n];
+    printf("SJF preemptive\n");
+    // Initialize processes
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        processes[i].arrival = arrival[i];
+        processes[i].burst = burst[i];
+        processes[i].remaining = burst[i];
+        processes[i].waiting = 0;
+        processes[i].turnaround = 0;
+
+        // Print arrival and burst time for each process
+        printf("Process %d: Arrival Time=%d, Burst Time=%d\n", processes[i].pid, processes[i].arrival, processes[i].burst);
+    }
+    // Perform SJF preemptive scheduling
+    calculateTimes(processes, n);
+    return 0;
+}
+
+
+// Priority P
+#include <stdio.h>
+struct Process {
+    int pid;        // Process ID
+    int arrival;    // Arrival Time
+    int burst;      // Burst Time
+    int priority;   // Priority
+    int remaining;  // Remaining Burst Time
+    int waiting;    // Waiting Time
+    int turnaround; // Turnaround Time
+};
+// Function to find the process with highest priority among the arrived processes
+int findHighestPriority(struct Process processes[], int n, int currentTime) {
+    int highestPriorityIndex = -1;
+    int highestPriority = 999999; // Initializing with a large value
+    for (int i = 0; i < n; i++) {
+        if (processes[i].arrival <= currentTime && processes[i].remaining > 0) {
+            if (processes[i].priority < highestPriority) {
+                highestPriority = processes[i].priority;
+                highestPriorityIndex = i;
+            }
+        }
+    }
+    return highestPriorityIndex;
+}
+// Function to calculate waiting and turnaround times for all processes
+void calculateTimes(struct Process processes[], int n) {
+    int currentTime = 0;
+    int completed = 0;
+    float totalWaitingTime = 0, totalTurnaroundTime = 0;
+    while (completed != n) {
+        int highestPriorityIndex = findHighestPriority(processes, n, currentTime);
+        if (highestPriorityIndex == -1) {
+            currentTime++;
+            continue;
+        }
+        // Decrement remaining burst time for the selected process
+        processes[highestPriorityIndex].remaining--;
+        // Update current time
+        currentTime++;
+        // If the process has completed execution
+        if (processes[highestPriorityIndex].remaining == 0) {
+            // Update waiting and turnaround times for the completed process
+            processes[highestPriorityIndex].waiting = currentTime - processes[highestPriorityIndex].arrival - processes[highestPriorityIndex].burst;
+            processes[highestPriorityIndex].turnaround = currentTime - processes[highestPriorityIndex].arrival;
+            // Update total waiting and turnaround times
+            totalWaitingTime += processes[highestPriorityIndex].waiting;
+            totalTurnaroundTime += processes[highestPriorityIndex].turnaround;
+            // Mark the process as completed
+            completed++;
+            printf("Process %d: Waiting Time=%d, Turnaround Time=%d\n", processes[highestPriorityIndex].pid,
+                   processes[highestPriorityIndex].waiting, processes[highestPriorityIndex].turnaround);
+        }
+    }
+    // Print average waiting and turnaround times
+    printf("Average Waiting Time = %f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time = %f\n", totalTurnaroundTime / n);
+}
+int main() {
+    // Predefined arrival, burst, and priority
+	int n;
+	int arrival[n];
+	int burst[n];
+	int priority[n];
+	printf("Enter number of processes: ");
+	scanf("%d", &n);
+	printf("Enter arrival times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &arrival[i]);
+	}
+	printf("Enter burst times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &burst[i]);
+	}
+	printf("Enter priority: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &priority[i]);
+	}
+    struct Process processes[n];
+    printf("Priority Preemptive\n");
+    // Initialize processes
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        processes[i].arrival = arrival[i];
+        processes[i].burst = burst[i];
+        processes[i].priority = priority[i];
+        processes[i].remaining = burst[i];
+        processes[i].waiting = 0;
+        processes[i].turnaround = 0;
+
+        // Print arrival, burst, and priority for each process
+        printf("Process %d: Arrival Time=%d, Burst Time=%d, Priority=%d\n", processes[i].pid, processes[i].arrival, processes[i].burst, processes[i].priority);
+    }
+    // Perform Priority preemptive scheduling
+    calculateTimes(processes, n);
+
+    return 0;
+}
+
+
+// Round-Robin
+#include <stdio.h>
+#define MAX_PROCESS 5
+struct Process {
+    int pid;        // Process ID
+    int arrival;    // Arrival Time
+    int burst;      // Burst Time
+    int remaining;  // Remaining Burst Time
+    int waiting;    // Waiting Time
+    int turnaround; // Turnaround Time
+};
+// Function to perform Round Robin scheduling
+void roundRobin(struct Process processes[], int n, int quantum) {
+    int remainingTime[MAX_PROCESS];
+    int currentTime = 0;
+    // Initialize remaining time array
+    for (int i = 0; i < n; i++)
+        remainingTime[i] = processes[i].burst;
+    // Continue until all processes are done
+    while (1) {
+        int done = 1;
+        // Traverse all processes
+        for (int i = 0; i < n; i++) {
+            // If process still has remaining time
+            if (remainingTime[i] > 0) {
+                done = 0; // There are still processes remaining
+                // Execute current process for quantum time or till its burst time if less than quantum
+                if (remainingTime[i] > quantum) {
+                    currentTime += quantum;
+                    remainingTime[i] -= quantum;
+                } else {
+                    currentTime += remainingTime[i];
+                    processes[i].waiting = currentTime - processes[i].burst - processes[i].arrival;
+                    remainingTime[i] = 0;
+                }
+            }
+        }
+        if (done == 1) // If all processes are done
+            break;
+    }
+    // Calculate turnaround time
+    for (int i = 0; i < n; i++) {
+        processes[i].turnaround = processes[i].burst + processes[i].waiting;
+    }
+}
+// Function to calculate average waiting and turnaround times
+void calculateTimes(struct Process processes[], int n) {
+    float totalWaitingTime = 0, totalTurnaroundTime = 0;
+    printf("Process\tArrival Time\tBurst Time\tWaiting Time\tTurnaround Time\n");
+    for (int i = 0; i < n; i++) {
+        printf("%d\t\t%d\t\t\t%d\t\t\t%d\t\t\t%d\n", processes[i].pid, processes[i].arrival, processes[i].burst, processes[i].waiting, processes[i].turnaround);
+        totalWaitingTime += processes[i].waiting;
+        totalTurnaroundTime += processes[i].turnaround;
+    }
+    // Print average waiting and turnaround times
+    printf("Average Waiting Time = %f\n", totalWaitingTime / n);
+    printf("Average Turnaround Time = %f\n", totalTurnaroundTime / n);
+}
+int main() {
+    // Predefined arrival and burst times
+	int n;
+	int arrival[n];
+	int burst[n];
+	printf("Enter number of processes: ");
+	scanf("%d", &n);
+	printf("Enter arrival times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &arrival[i]);
+	}
+	printf("Enter burst times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &burst[i]);
+	}
+    struct Process processes[n];
+    printf("Round Robin with Time Quantum\n");
+    // Initialize processes
+    for (int i = 0; i < n; i++) {
+        processes[i].pid = i + 1;
+        processes[i].arrival = arrival[i];
+        processes[i].burst = burst[i];
+        processes[i].remaining = burst[i];
+        processes[i].waiting = 0;
+        processes[i].turnaround = 0;
+    }
+    // Perform Round Robin scheduling
+    int quantum = 2; // Time quantum
+    printf("Time Quantum: %d\n", quantum);
+    roundRobin(processes, n, quantum);
+    // Print results
+    calculateTimes(processes, n);
+    return 0;
+}
+
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+// FCFS
+#include <stdio.h>
+void bubbleSort(int n, int *p, int *at, int *bt) {
+	int i, j, temp;
+	for (i=0; i<n-1; i++) {
+		for (j=0; j<n-i-1; j++) {
+			if (at[j] > at[j+1]) {
+				temp = at[j];
+				at[j] = at[j+1];
+				at[j+1] = temp;
+				temp = p[j];
+				p[j] = p[j+1];
+				p[j+1] = temp;
+				temp = bt[j];
+				bt[j] = bt[j+1];
+				bt[j+1] = temp;
+			}
+		}
+	}
+}
+void calcCt(int n, int *at, int *bt, int *ct) {
+	int i, temp;
+	ct[0] = at[0] + bt[0];
+	for (i=1; i<n; i++) {
+		temp = 0;
+		if (ct[i-1] < at[i]) {
+			temp = at[i] - ct[i-1];
+		}
+		ct[i] = ct[i-1] + bt[i] + temp;
+	}
+}
+void calcTatWt(int n, int *ct, int *at, int *bt, int *tat, int *wt) {
+	int i;
+	for (i=0; i<n; i++) {
+		tat[i] = ct[i] - at[i];
+		wt[i] = tat[i] - bt[i];
+	}
+}
+float average(int n, int *arr) {
+	int i, sum=0;
+	for (i=0; i<n; i++) {
+		sum += arr[i];
+	}
+	return ((sum+0.0) / n);
+}
+void main() {
+	int i;
+	int n;
+	printf("Enter number of processes: ");
+	scanf("%d", &n);
+	int p[n];
+	int at[n];
+	int bt[n];
+	printf("Enter process ids: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &p[i]);
+	}
+	printf("Enter arrival times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &at[i]);
+	}
+	printf("Enter burst times: \n");
+	for (int i = 0; i < n; i++){
+		scanf("%d", &bt[i]);
+	}
 	int ct[3], tat[3], wt[3];
 	float atat, awt;
 	printf("FCFS Scheduling Algorithm\n");	
